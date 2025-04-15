@@ -26,6 +26,7 @@ interface CloudinaryResponse {
   bytes: number;
   type: string;
   url: string;
+  access_mode: string;
 }
 
 interface CloudinaryError {
@@ -56,12 +57,15 @@ export const uploadImageToCloudinary = async (file: File): Promise<CloudinaryRes
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
     formData.append('cloud_name', CLOUD_NAME);
+    formData.append('access_mode', 'public'); // Ensure public access
+    formData.append('resource_type', 'image');
 
     console.log('Attempting upload with config:', {
       cloudName: CLOUD_NAME,
       uploadPreset: UPLOAD_PRESET,
       fileType: file.type,
-      fileSize: file.size
+      fileSize: file.size,
+      accessMode: 'public'
     });
 
     const response = await fetch(
@@ -85,11 +89,17 @@ export const uploadImageToCloudinary = async (file: File): Promise<CloudinaryRes
     console.log('Cloudinary upload successful:', {
       url: data.secure_url,
       publicId: data.public_id,
-      format: data.format
+      format: data.format,
+      accessMode: data.access_mode
     });
     
     if (!data.secure_url) {
       throw new Error('Invalid response: Missing secure_url');
+    }
+
+    // Verify the URL is using HTTPS
+    if (!data.secure_url.startsWith('https://')) {
+      data.secure_url = data.secure_url.replace('http://', 'https://');
     }
 
     return data;
