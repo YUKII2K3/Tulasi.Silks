@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
+import plugin from "tailwindcss/plugin";
 
 export default {
 	darkMode: ["class"],
@@ -112,10 +114,16 @@ export default {
 				'fade-out': 'fade-out 0.5s ease-out'
 			},
 			fontFamily: {
+				sans: ["var(--font-sans)", ...fontFamily.sans],
 				'playfair': ['Playfair Display', 'serif'],
 				'raleway': ['Raleway', 'sans-serif']
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		plugin(({ addVariant }) => {
+			addVariant("hocus", ["&:hover", "&:focus"])
+		})
+	],
 } satisfies Config;

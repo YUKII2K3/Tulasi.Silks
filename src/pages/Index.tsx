@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from '@/components/layout/Layout';
 import Hero from '@/components/home/Hero';
@@ -9,11 +8,10 @@ import LimitedOffer from '@/components/home/LimitedOffer';
 import ContactSection from '@/components/home/ContactSection';
 
 const Index = () => {
-  // In a real implementation, these would be determined by checking if products exist
-  // in each category via API calls or context
-  const showFeaturedProducts = false;
-  const showDealsSection = false;
-  const showLimitedOffer = false;
+  // Show sections if products exist
+  const showFeaturedProducts = true;
+  const showDealsSection = true;
+  const showLimitedOffer = true;
 
   return (
     <Layout>

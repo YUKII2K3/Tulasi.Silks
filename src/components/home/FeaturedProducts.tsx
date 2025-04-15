@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Package } from 'lucide-react';
 
@@ -82,8 +81,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
 };
 
 const FeaturedProducts = () => {
-  // Empty products array - will be populated when the admin adds products
-  const products: ProductCardProps[] = [];
+  const [products, setProducts] = useState<ProductCardProps[]>([]);
+
+  useEffect(() => {
+    // Load products from localStorage
+    const savedProducts = localStorage.getItem('saree-shop-products');
+    if (savedProducts) {
+      try {
+        const parsedProducts = JSON.parse(savedProducts);
+        // Filter only featured products
+        const featuredProducts = parsedProducts.filter((p: ProductCardProps) => p.showInFeatured);
+        setProducts(featuredProducts);
+      } catch (error) {
+        console.error("Error loading products:", error);
+      }
+    }
+  }, []);
 
   // If no products, show placeholder message
   if (products.length === 0) {

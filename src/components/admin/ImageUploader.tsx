@@ -1,10 +1,10 @@
-
 import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { cn } from '@/lib/utils';
 import { Image, Upload, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { uploadImageToCloudinary } from '@/lib/cloudinary';
 
 interface ImageUploaderProps {
   value?: string;
@@ -33,7 +33,7 @@ const ImageUploader = ({
     setPreviewUrl(value);
   }, [value]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setError(null);
     const file = acceptedFiles[0];
     
@@ -51,25 +51,31 @@ const ImageUploader = ({
     
     setIsLoading(true);
     
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      setPreviewUrl(result);
-      onChange(result);
+    try {
+      // Create a temporary preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to Cloudinary
+      const cloudinaryResponse = await uploadImageToCloudinary(file);
+      setPreviewUrl(cloudinaryResponse.secure_url);
+      onChange(cloudinaryResponse.secure_url);
+      
+      toast.success("Image uploaded successfully", {
+        description: "Your image has been uploaded and will be displayed on the website."
+      });
+    } catch (error) {
+      setError("Failed to upload image");
+      toast.error("Upload failed", {
+        description: "Please try again"
+      });
+      console.error('Upload error:', error);
+    } finally {
       setIsLoading(false);
-    };
-    
-    reader.onabort = () => {
-      setError("File reading was aborted");
-      setIsLoading(false);
-    };
-    
-    reader.onerror = () => {
-      setError("File reading has failed");
-      setIsLoading(false);
-    };
-    
-    reader.readAsDataURL(file);
+    }
   }, [onChange, maxSizeInMB]);
 
   const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
@@ -98,77 +104,44 @@ const ImageUploader = ({
 
   return (
     <div className={cn("space-y-2", className)}>
-      {label && <div className="text-sm font-medium">{label}</div>}
+      <label className="text-sm font-medium text-gray-700">{label}</label>
       <div
         {...getRootProps()}
         className={cn(
-          "relative border-2 border-dashed rounded-lg overflow-hidden transition-colors",
-          isDragActive ? "border-saree-maroon bg-saree-maroon/5" : "border-gray-300 hover:border-saree-maroon/70",
-          previewUrl ? "p-0" : "p-6",
-          error ? "border-red-500" : "",
-          className
+          "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors",
+          isDragActive ? "border-saree-gold bg-saree-cream" : "border-gray-300 hover:border-saree-gold",
+          isLoading && "opacity-50 cursor-not-allowed"
         )}
-        style={{
-          aspectRatio: aspectRatio
-        }}
       >
         <input {...getInputProps()} />
-
         {isLoading ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
-            <Loader2 className="h-8 w-8 animate-spin text-saree-maroon" />
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-saree-gold" />
+            <p className="mt-2 text-sm text-gray-500">Uploading to Cloudinary...</p>
           </div>
-        ) : null}
-
-        {previewUrl ? (
-          <div className="relative h-full w-full">
+        ) : previewUrl ? (
+          <div className="relative">
             <img
               src={previewUrl}
               alt="Preview"
-              className="h-full w-full object-cover"
+              className="mx-auto max-h-48 rounded-lg object-cover"
             />
-            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 hover:opacity-100">
-              <Button
-                type="button"
-                variant="outline"
-                className="bg-white hover:bg-white text-gray-800 mr-2"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Upload className="h-4 w-4 mr-1" />
-                Change
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="bg-white hover:bg-white text-red-600 hover:text-red-700"
-                onClick={handleRemoveImage}
-              >
-                <X className="h-4 w-4 mr-1" />
-                Remove
-              </Button>
-            </div>
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+            >
+              <X size={16} />
+            </button>
           </div>
         ) : (
-          <div className="text-center">
-            <div className="flex flex-col items-center justify-center text-gray-500">
-              <Image className="h-10 w-10 mb-2" />
-              {isDragActive ? (
-                <p className="text-saree-maroon">Drop the image here...</p>
-              ) : (
-                <>
-                  <p>{placeholder}</p>
-                  <p className="text-xs mt-1">
-                    (Max size: {maxSizeInMB}MB)
-                  </p>
-                </>
-              )}
-            </div>
+          <div className="flex flex-col items-center justify-center py-8">
+            <Upload className="h-8 w-8 text-gray-400" />
+            <p className="mt-2 text-sm text-gray-500">{placeholder}</p>
           </div>
         )}
       </div>
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
   );
 };

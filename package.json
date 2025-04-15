@@ -42,6 +42,7 @@
     "@tanstack/react-query": "^5.56.2",
     "caniuse-lite": "^1.0.30001713",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.6.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",

@@ -32,3 +32,15 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
