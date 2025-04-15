@@ -37,7 +37,20 @@ const ImageUploader = ({
     setError(null);
     const file = acceptedFiles[0];
     
-    if (!file) return;
+    if (!file) {
+      setError("No file selected");
+      return;
+    }
+    
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      setError(`File type ${file.type} is not supported. Please upload JPEG, PNG, WebP, or GIF images.`);
+      toast.error("Unsupported file type", {
+        description: "Please upload a JPEG, PNG, WebP, or GIF image"
+      });
+      return;
+    }
     
     // Check file size (convert MB to bytes)
     const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
@@ -68,20 +81,29 @@ const ImageUploader = ({
         description: "Your image has been uploaded and will be displayed on the website."
       });
     } catch (error) {
-      setError("Failed to upload image");
+      let errorMessage = "Failed to upload image. Please try again.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      setError(errorMessage);
       toast.error("Upload failed", {
-        description: "Please try again"
+        description: errorMessage
       });
       console.error('Upload error:', error);
+      // Reset preview if upload fails
+      setPreviewUrl(value);
     } finally {
       setIsLoading(false);
     }
-  }, [onChange, maxSizeInMB]);
+  }, [onChange, maxSizeInMB, value]);
 
   const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.gif']
+      'image/jpeg': ['.jpeg', '.jpg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp'],
+      'image/gif': ['.gif']
     },
     maxSize: maxSizeInMB * 1024 * 1024,
     multiple: false
