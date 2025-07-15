@@ -58,7 +58,7 @@ A modern e-commerce platform for traditional silk sarees and ethnic wear, offeri
    yarn dev
    ```
 
-The application will be available at `http://localhost:5173`.
+The application will be available at `[http://localhost:5173](https://tulasi-silks.vercel.app/)`.
 
 ## Project Structure
 
